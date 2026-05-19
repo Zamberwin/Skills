@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BI Maturity Assessment Framework</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --blue: #2E5090;
+    --blue-lt: #D6E4F0;
+    --blue-mid: #85B7EB;
+    --green: #1D9E75;
+    --green-lt: #E2EFDA;
+    --green-dk: #375623;
+    --amber: #BA7517;
+    --amber-lt: #FFF2CC;
+    --red: #E24B4A;
+    --red-lt: #FCE4D6;
+    --red-dk: #843C0C;
+    --gray: #5F5E5A;
+    --gray-lt: #F2F2F2;
+    --gray-mid: #D3D1C7;
+    --white: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: #e0ddd6;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f7f6f2; color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  /* Header */
+  .app-header { background: var(--navy); color: white; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .app-title { font-size: 18px; font-weight: 600; }
+  .app-sub { font-size: 12px; opacity: .7; margin-top: 2px; }
+  .header-badge { background: rgba(255,255,255,.15); border-radius: 20px; padding: 4px 12px; font-size: 11px; }
+
+  /* Layout */
+  .layout { display: flex; min-height: calc(100vh - 64px); }
+  .sidebar { width: 220px; background: white; border-right: 1px solid var(--border); flex-shrink: 0; padding: 16px 0; }
+  .main { flex: 1; padding: 24px 28px; overflow-y: auto; max-width: 960px; }
+
+  /* Sidebar nav */
+  .snav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); padding: 6px 16px 4px; }
+  .snav-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--text-muted); border-left: 3px solid transparent; transition: all .15s; }
+  .snav-item:hover { background: var(--gray-lt); color: var(--text); }
+  .snav-item.active { background: var(--blue-lt); color: var(--blue); border-left-color: var(--blue); font-weight: 500; }
+  .snav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .snav-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+  .prog-mini { margin: 12px 16px 0; }
+  .prog-mini-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .prog-mini-fill { height: 4px; background: var(--blue); border-radius: 2px; transition: width .3s; }
+  .prog-mini-label { font-size: 10px; color: var(--text-muted); }
+
+  /* Section */
+  .section { display: none; }
+  .section.active { display: block; }
+  .page-title { font-size: 20px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+  /* Level cards */
+  .level-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px; }
+  .lcard { border-radius: 10px; padding: 14px 12px; text-align: center; border: 1px solid var(--border); }
+  .lcard-num { font-size: 28px; font-weight: 700; }
+  .lcard-name { font-size: 12px; font-weight: 600; margin: 4px 0; }
+  .lcard-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .lc1 { background: #fff5f5; } .lc1 .lcard-num, .lc1 .lcard-name { color: var(--red); }
+  .lc2 { background: var(--amber-lt); } .lc2 .lcard-num, .lc2 .lcard-name { color: var(--amber); }
+  .lc3 { background: var(--gray-lt); } .lc3 .lcard-num, .lc3 .lcard-name { color: var(--gray); }
+  .lc4 { background: var(--green-lt); } .lc4 .lcard-num, .lc4 .lcard-name { color: var(--green); }
+  .lc5 { background: var(--blue-lt); } .lc5 .lcard-num, .lc5 .lcard-name { color: var(--blue); }
+
+  /* Dimension overview grid */
+  .dim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .dov { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .dov-title { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 5px; display: flex; align-items: center; gap: 7px; }
+  .dov-desc { font-size: 12px; color: var(--text-muted); line-height: 1.45; }
+
+  /* Assessment */
+  .dim-block { background: white; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+  .dim-hdr { padding: 12px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: white; transition: background .15s; }
+  .dim-hdr:hover { background: var(--gray-lt); }
+  .dim-hdr-left { display: flex; align-items: center; gap: 10px; }
+  .dim-icon { font-size: 18px; }
+  .dim-hdr-title { font-size: 14px; font-weight: 600; color: var(--navy); }
+  .dim-hdr-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .dim-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--gray-lt); color: var(--text-muted); font-weight: 500; }
+  .dim-body { display: none; border-top: 1px solid var(--border); padding: 16px; }
+  .dim-body.open { display: block; }
+  .chev { font-size: 12px; color: var(--text-muted); transition: transform .2s; }
+  .dim-hdr.expanded .chev { transform: rotate(180deg); }
+
+  /* Criterion */
+  .criterion { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .criterion:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .crit-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .crit-guide { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-style: italic; line-height: 1.45; }
+  .level-btns { display: flex; flex-direction: column; gap: 5px; }
+  .lvl-btn { text-align: left; padding: 7px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text-muted); transition: all .12s; line-height: 1.4; }
+  .lvl-btn:hover { background: var(--gray-lt); border-color: var(--gray-mid); color: var(--text); }
+  .lvl-btn.sel-1 { background: #fff0f0; border-color: var(--red); color: var(--red-dk); font-weight: 500; }
+  .lvl-btn.sel-2 { background: var(--amber-lt); border-color: var(--amber); color: #5a3800; font-weight: 500; }
+  .lvl-btn.sel-3 { background: var(--gray-lt); border-color: var(--gray-mid); color: var(--gray); font-weight: 500; }
+  .lvl-btn.sel-4 { background: var(--green-lt); border-color: var(--green); color: var(--green-dk); font-weight: 500; }
+  .lvl-btn.sel-5 { background: var(--blue-lt); border-color: var(--blue); color: var(--navy); font-weight: 500; }
+  .lvl-num { font-weight: 700; margin-right: 4px; }
+
+  /* Progress bar */
+  .prog-bar-wrap { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .prog-bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .prog-bar-fill { height: 8px; background: var(--blue); border-radius: 4px; transition: width .3s; }
+  .prog-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .prog-count { font-size: 12px; font-weight: 600; color: var(--navy); white-space: nowrap; min-width: 80px; text-align: right; }
+
+  /* Results */
+  .results-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .rstat { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .rstat-val { font-size: 28px; font-weight: 700; color: var(--navy); }
+  .rstat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); margin-top: 3px; }
+  .dim-result-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .dim-result-row:last-child { border-bottom: none; }
+  .drr-name { font-size: 12px; font-weight: 500; color: var(--text); min-width: 220px; }
+  .drr-bar-bg { flex: 1; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+  .drr-bar-fill { height: 10px; border-radius: 5px; transition: width .6s; }
+  .drr-score { font-size: 12px; font-weight: 700; min-width: 36px; text-align: right; }
+  .drr-level { font-size: 10px; color: var(--text-muted); min-width: 56px; }
+  .panel { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .panel-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+  .rec-dim-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .rec-pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .rec-body { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .rec-action { display: flex; gap: 7px; font-size: 12px; color: var(--text-muted); padding: 3px 0; line-height: 1.45; }
+  .rec-arrow { color: var(--blue); flex-shrink: 0; font-weight: 700; }
+
+  /* Buttons */
+  .btn { padding: 8px 16px; font-size: 13px; border-radius: 7px; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text); font-weight: 500; transition: all .15s; margin-right: 8px; margin-top: 8px; }
+  .btn:hover { background: var(--gray-lt); }
+  .btn-primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-primary:hover { background: var(--blue); border-color: var(--blue); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* Print */
+  @media print {
+    .sidebar, .app-header { display: none; }
+    .main { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <div class="app-title">Business Intelligence Maturity Assessment Framework</div>
+    <div class="app-sub">8 dimensions · 40 criteria · 5 maturity levels · Interactive scoring & recommendations</div>
+  </div>
+  <div class="header-badge">Nicolas Raad — Data Consulting Group</div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="snav-label">Navigation</div>
+    <div class="snav-item active" onclick="showSection('overview')"><span class="snav-icon">📋</span>Overview</div>
+    <div class="snav-item" onclick="showSection('assess')"><span class="snav-icon">✅</span>Assessment</div>
+    <div class="snav-item" onclick="showSection('results')"><span class="snav-icon">📊</span>Results</div>
+    <div class="snav-divider"></div>
+    <div class="snav-label">Dimensions</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('foundation')"><span class="snav-icon">🏗</span>Data Foundation</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('governance')"><span class="snav-icon">🛡</span>Governance & Quality</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('bi_tools')"><span class="snav-icon">📈</span>BI Tools & Reporting</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('kpi')"><span class="snav-icon">🎯</span>KPI Management</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('analytics')"><span class="snav-icon">🤖</span>Analytics & AI</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('security')"><span class="snav-icon">🔐</span>Security & Access</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('org')"><span class="snav-icon">👥</span>Organisation & Culture</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('operations')"><span class="snav-icon">⚙️</span>Operations</div>
+    <div class="snav-divider"></div>
+    <div class="prog-mini">
+      <div class="prog-mini-label" id="prog-mini-label">0 / 40 answered</div>
+      <div class="prog-mini-bar"><div class="prog-mini-fill" id="prog-mini-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div id="section-overview" class="section active">
+      <div class="page-title">BI Maturity Framework</div>
+      <div class="page-sub">Assess your organisation's Business Intelligence maturity across 8 dimensions with 40 scored criteria. Each dimension is scored 1–5. Scores generate personalised recommendations.</div>
+
+      <div class="level-row">
+        <div class="lcard lc1"><div class="lcard-num">1</div><div class="lcard-name">Reactive</div><div class="lcard-desc">Ad hoc reporting. No standards. Data in spreadsheets. BI is a fire-fighting tool.</div></div>
+        <div class="lcard lc2"><div class="lcard-num">2</div><div class="lcard-name">Emerging</div><div class="lcard-desc">Some BI tools in place. Limited governance. Inconsistent KPIs. Siloed efforts.</div></div>
+        <div class="lcard lc3"><div class="lcard-num">3</div><div class="lcard-name">Defined</div><div class="lcard-desc">Standardised platforms. Documented processes. Governed KPIs. Proactive quality.</div></div>
+        <div class="lcard lc4"><div class="lcard-num">4</div><div class="lcard-name">Managed</div><div class="lcard-desc">Measured outcomes. Predictive analytics. Self-service at scale. Data-driven culture.</div></div>
+        <div class="lcard lc5"><div class="lcard-num">5</div><div class="lcard-name">Optimised</div><div class="lcard-desc">AI-driven insights. Continuous improvement. BI as competitive advantage.</div></div>
+      </div>
+
+      <div class="dim-grid">
+        <div class="dov"><div class="dov-title">🏗 1. Data Foundation & Architecture</div><div class="dov-desc">Data warehouse design, layer separation (Bronze/Silver/Gold), data modelling, platform modernisation, pipeline reliability, and freshness SLA compliance.</div></div>
+        <div class="dov"><div class="dov-title">🛡 2. Data Governance & Quality</div><div class="dov-desc">Ownership, stewardship, DQ rules and scorecards, metadata and lineage, governance council operating model, and remediation process maturity.</div></div>
+        <div class="dov"><div class="dov-title">📈 3. BI Tools & Reporting</div><div class="dov-desc">BI platform standardisation, self-service maturity, semantic layer governance, report lifecycle management, and regulatory reporting capability.</div></div>
+        <div class="dov"><div class="dov-title">🎯 4. KPI & Metrics Management</div><div class="dov-desc">KPI definition and certification, single source of truth, business alignment and decision support, forecasting integration, and data literacy.</div></div>
+        <div class="dov"><div class="dov-title">🤖 5. Advanced Analytics & AI</div><div class="dov-desc">Predictive modelling and ML in production, GenAI and LLM implementation, AI governance and responsible AI, and experimentation framework maturity.</div></div>
+        <div class="dov"><div class="dov-title">🔐 6. Security & Access Control</div><div class="dov-desc">Identity and access management, MFA, JIT provisioning, data classification and encryption, audit trail immutability, and cybersecurity posture.</div></div>
+        <div class="dov"><div class="dov-title">👥 7. Organisation & Culture</div><div class="dov-desc">Executive sponsorship, team structure and capability, data-driven culture, change management effectiveness, and adoption measurement.</div></div>
+        <div class="dov"><div class="dov-title">⚙️ 8. Operations & Observability</div><div class="dov-desc">Pipeline monitoring and alerting, incident management and post-mortems, cost governance and FinOps, and continuous improvement measurement.</div></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="showSection('assess')">Start Assessment →</button>
+    </div>
+
+    <!-- ASSESSMENT -->
+    <div id="section-assess" class="section">
+      <div class="page-title">Assessment</div>
+      <div class="page-sub">For each criterion, select the level that best describes your organisation's current state. Click a level to select it.</div>
+
+      <div class="prog-bar-wrap">
+        <div class="prog-label">Progress</div>
+        <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-bar-fill" style="width:0%"></div></div>
+        <div class="prog-count" id="prog-count-main">0 / 40 answered</div>
+      </div>
+
+      <div id="assessment-body"></div>
+
+      <button class="btn btn-primary" onclick="showSection('results')" style="margin-top:12px">View Results →</button>
+      <button class="btn" onclick="resetAll()" style="margin-top:12px">Reset All</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="section-results" class="section">
+      <div class="page-title">Results & Recommendations</div>
+      <div class="page-sub">Your BI maturity scores and prioritised improvement roadmap.</div>
+      <div id="results-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DIMS = [
+{id:"foundation",name:"Data Foundation & Architecture",icon:"🏗",criteria:[
+  {id:"f1",title:"Data warehouse layer separation (Bronze/Silver/Gold)",guide:"How clearly are raw, cleansed, and business-ready layers defined and enforced?",levels:["No formal layers — analysts query raw operational systems directly","Some separation exists but not consistently enforced across teams","Bronze/Silver/Gold layers defined, documented, and enforced by access controls","Layers are automated, tested in CI, and aligned to a data mesh or domain ownership model","Fully federated domain ownership with automated quality gates at each layer boundary"]},
+  {id:"f2",title:"Data modelling & schema standards",guide:"How standardised and governed is the physical and logical data model?",levels:["No modelling standards — schemas designed ad hoc per project","Some star schemas exist but inconsistently. No canonical model.","Enterprise canonical model published. Star schemas enforced in Gold. Change control in place.","Canonical model version-controlled, impact-assessed automatically on change. SCD strategies documented.","Fully automated schema impact analysis, lineage-driven change propagation, domain-aligned ownership"]},
+  {id:"f3",title:"Data pipeline reliability & idempotency",guide:"How reliable, testable, and re-runnable are ingestion and transformation pipelines?",levels:["Pipelines fail regularly. Manual intervention required. No retry logic.","Some pipelines have retry logic. Failures are manually investigated.","All pipelines are idempotent, version-controlled in Git, with automated tests in CI/CD.","Dead letter queues, circuit breakers, dependency-aware scheduling, and SLA monitoring in place.","Fully self-healing pipelines with anomaly detection, auto-remediation, zero-manual-intervention target"]},
+  {id:"f4",title:"Platform modernisation & scalability",guide:"How modern, scalable, and cost-efficient is the data platform?",levels:["Legacy on-premises database. No auto-scaling. Manual maintenance.","Partial cloud migration. Some modernisation underway but legacy still dominant.","Cloud data warehouse (Snowflake/Synapse/BigQuery) in production. Auto-suspend/resume configured.","Multi-layer architecture with workload isolation, compute tiering, and cost allocation by team.","Fully cloud-native, serverless where applicable. Cost anomaly detection and capacity forecasting automated."]},
+  {id:"f5",title:"Data freshness & SLA compliance",guide:"How consistently does data arrive on time and meet business freshness requirements?",levels:["No freshness SLAs defined. Users discover stale data when reports look wrong.","Informal freshness expectations exist but are not monitored or enforced.","Freshness SLAs defined per dataset, monitored automatically, and breaches trigger alerts.","Dependency-aware scheduling. Proactive staleness notification to consumers. SLA trend reporting.","Predictive SLA breach detection, automated consumer notification, self-healing refresh triggers"]},
+]},
+{id:"governance",name:"Data Governance & Quality",icon:"🛡",criteria:[
+  {id:"g1",title:"Data ownership & stewardship",guide:"How clearly are data ownership and stewardship roles defined and active?",levels:["No data owners or stewards defined. IT owns everything by default.","Some domain ownership discussed but not formally assigned or documented.","Named Data Owners and Stewards for all critical domains. RACI published and reviewed annually.","Stewards actively govern DQ thresholds, adjudicate source-of-record, attend governance councils.","Federated governance with domain-level accountability, automated stewardship alerts, and maturity scoring"]},
+  {id:"g2",title:"Data quality rules & scorecards",guide:"How comprehensive and automated is the data quality monitoring program?",levels:["No DQ rules defined. Quality issues discovered by business users.","Some manual DQ checks exist. No automated scorecards. Reactive approach.","Automated DQ rules across all DAMA dimensions. Daily scorecards published to stakeholders.","DQ index per asset as golden record baseline. Executive budget secured for remediation. Trend reporting.","Full DAMA lifecycle: profiling → rules → monitoring → remediation → stewardship. AI-assisted anomaly detection."]},
+  {id:"g3",title:"Metadata, lineage & data catalog",guide:"How complete and current is the enterprise data catalog with lineage?",levels:["No data catalog. Metadata exists only in developer knowledge.","Partial catalog exists but is manually maintained and frequently out of date.","Automated lineage capture. 70%+ assets catalogued with business definitions. End-to-end lineage.","LLM-assisted catalog automation. Security classification automated. 95%+ asset coverage.","Full end-to-end lineage from source to BI report. Catalog drives access control, retention, and cost allocation."]},
+  {id:"g4",title:"Data governance council & operating model",guide:"How mature is the governance operating model and decision-making forum?",levels:["No governance forum. Decisions made ad hoc with no accountability.","Informal data governance discussions occur but no formal council or operating model.","Monthly governance council with RACI, charter, escalation paths, and decision logs. Policies published.","Council drives DQ threshold approvals, data risk reporting to board, and cross-domain adjudication.","Federated council with domain representation, automated policy compliance monitoring, and board reporting"]},
+  {id:"g5",title:"Data remediation & risk management",guide:"How structured is the process for identifying and resolving data risks and quality issues?",levels:["No remediation process. Issues accumulate indefinitely. No risk tracking.","Issues raised informally. Some get fixed, many do not. No SLA or tracking.","Structured remediation intake: alert → owner → root cause → fix → validation. SLA monitored.","High-priority data risks eliminated. Executive investment approved for remediation pathways.","Predictive risk detection, automated remediation for known patterns, quarterly risk reporting to board"]},
+]},
+{id:"bi_tools",name:"BI Tools & Reporting",icon:"📈",criteria:[
+  {id:"b1",title:"BI platform standardisation",guide:"How standardised is the enterprise BI tool landscape?",levels:["Multiple competing BI tools with no governance. Report proliferation out of control.","One or two primary tools identified but no governance. Shadow BI tools still in use.","Standard BI platform selected (Power BI/Tableau/Qlik). Tool governance policy published and enforced.","BI tool landscape governed: development standards, validation processes, training programs in place.","Single governed BI platform with semantic layer, certified metric hub, and API-driven report distribution"]},
+  {id:"b2",title:"Self-service analytics enablement",guide:"How effectively can business users access and analyse data independently?",levels:["All reports built by IT. Business users have no self-service capability.","Some self-service attempted but data is ungoverned. Users build inconsistent metrics.","Governed self-service on certified datasets. Training provided. Adoption tracked.","250+ stakeholders trained. Ad hoc reporting reduced significantly. Curated data products published.","Full self-service ecosystem: certified metrics, semantic views, natural language query, guided analytics"]},
+  {id:"b3",title:"Report lifecycle management",guide:"How well-governed is the report portfolio from creation through retirement?",levels:["No report lifecycle. Reports accumulate. No one knows what is current.","Some report ownership identified but no formal lifecycle or certification process.","Report lifecycle defined: Draft → Certified → Deprecated → Retired. Certification requires DQ sign-off.","Report usage tracked. Unused reports retired automatically. Portfolio reviewed quarterly.","AI-assisted report recommendation, usage-driven prioritisation, automated impact assessment on changes"]},
+  {id:"b4",title:"Semantic layer & KPI consistency",guide:"How effectively does a semantic layer prevent metric drift across BI tools?",levels:["No semantic layer. Every report defines its own metrics. Numbers never reconcile.","Some shared datasets exist but KPI definitions are not enforced or documented.","Semantic layer governs KPI definitions. Context layer prevents metric drift. Certified measure hub.","Reporting spec framework integrated into catalog. KPI changes require governance approval.","Universal semantic layer feeds all BI tools. Metric lineage tracked. Breaking changes blocked in CI"]},
+  {id:"b5",title:"Regulatory & compliance reporting",guide:"How mature is the reporting capability for regulatory and compliance requirements?",levels:["Regulatory reports built manually from raw data. High error rate. No audit trail.","Some regulatory reports automated but not fully governed. Lineage incomplete.","All regulatory reports sourced from Gold layer with full lineage and DQ validation. Audit trail in place.","Reports reconcile to source systems monthly. Variances investigated. Regulatory delivery automated.","Continuous regulatory report validation. Automated reconciliation. Regulatory change monitoring in place."]},
+]},
+{id:"kpi",name:"KPI & Metrics Management",icon:"🎯",criteria:[
+  {id:"k1",title:"KPI definition & certification",guide:"How rigorously are enterprise KPIs defined, certified, and maintained?",levels:["No certified KPIs. Every team defines their own version of Revenue, Customer, etc.","Some KPIs documented but not certified or enforced. Multiple definitions coexist.","Single certified definition per KPI: formula, source, owner, refresh cadence. Published in catalog.","All reports use certified measures. KPI changes require governance sign-off. Version history maintained.","Automated KPI consistency enforcement. Breaking changes blocked. Metric impact analysis automated."]},
+  {id:"k2",title:"Business alignment & decision support",guide:"How effectively does BI drive business decisions and strategic planning?",levels:["BI used reactively. Decisions made on intuition or spreadsheets rather than BI outputs.","Some operational decisions informed by BI but strategic planning still spreadsheet-driven.","BI informs operational decisions. Executive dashboards in use. Strategy team uses data for planning.","BI is a primary input to strategic decisions. Board reporting uses certified BI outputs.","BI drives autonomous decisions through embedded analytics. Executives use BI as their primary lens."]},
+  {id:"k3",title:"Forecasting & planning integration",guide:"How integrated is analytical forecasting with business planning processes?",levels:["No analytical forecasting. Planning done in spreadsheets disconnected from warehouse data.","Some historical trend analysis used informally for planning. Not integrated into formal process.","Predictive models inform demand forecasting and resource planning. Model outputs fed to planning tools.","Scenario-based analytics support quarterly planning. Driver analysis and what-if modelling available.","Real-time forecasting with ML models retrained on new data. Planning system integrated with warehouse."]},
+  {id:"k4",title:"Data literacy & analytics fluency",guide:"How data-literate is the wider organisation — beyond the data team?",levels:["Business users cannot interpret data outputs. Data team mediates all analysis.","Some business users can use dashboards but cannot interrogate or validate data independently.","Quarterly data literacy training. 60%+ of business users certified on self-service tools.","Data literacy measured and tracked. Champions network established. Improving year-on-year.","Organisation-wide data fluency. Business users run their own analyses. Data team focuses on innovation."]},
+]},
+{id:"analytics",name:"Advanced Analytics & AI",icon:"🤖",criteria:[
+  {id:"a1",title:"Predictive modelling & ML in production",guide:"How mature is the deployment and monitoring of ML models in production?",levels:["No ML in production. Analytics is entirely descriptive and historical.","Some ML experiments conducted but not in production. Results not integrated into operations.","ML models in production with defined use cases. Model cards documented. Human-in-the-loop validation.","MLOps practices: feature stores, model versioning, drift monitoring, automated retraining triggers.","End-to-end ML platform: automated training pipelines, A/B testing, champion/challenger deployment."]},
+  {id:"a2",title:"GenAI & LLM implementation",guide:"How mature is the organisation's use of GenAI and LLMs for data and analytics?",levels:["No GenAI or LLM use cases. No exploration underway.","GenAI explored in proof-of-concept. No production deployments. No governance framework.","1-2 production LLM flows deployed with documented model cards and human-in-the-loop validation.","LLM-powered catalog automation, security classification, and natural language query in production.","Full LLMOps practice: model risk assessment, drift monitoring, responsible AI framework, audit artifacts."]},
+  {id:"a3",title:"AI governance & responsible AI",guide:"How mature is the AI governance framework covering model risk, fairness, and auditability?",levels:["No AI governance. Models deployed without documentation or risk assessment.","Ad hoc risk review for some models. No formal framework. No model inventory.","AI governance framework defined: model cards, risk assessment, human-in-the-loop requirements documented.","Model inventory maintained. Audit artifacts created. Fairness evaluations conducted pre-deployment.","Continuous AI risk monitoring. Automated bias detection. Regulatory alignment validated. Board-level reporting."]},
+  {id:"a4",title:"Experimentation & A/B testing",guide:"How mature is the capability to run controlled analytical experiments?",levels:["No experimentation framework. No A/B testing. Decisions made without controlled comparison.","Some informal comparisons made but not statistically rigorous. No controlled experiment framework.","Experimentation framework defined. Statistical significance requirements documented. Results tracked.","A/B testing integrated into product and operational decisions. Results fed back to training data.","Continuous experimentation platform. Automated significance testing. Multi-armed bandit optimisation."]},
+]},
+{id:"security",name:"Security & Access Control",icon:"🔐",criteria:[
+  {id:"s1",title:"Identity & access management",guide:"How mature is IAM for BI and data warehouse access?",levels:["Shared credentials. No MFA. No access review process. Minimal role separation.","Basic role-based access. MFA not enforced. Access reviews infrequent or manual.","MFA enforced. RBAC with quarterly reviews. JIT provisioning for elevated access. Orphan account automation.","PAW for DBAs. ABAC for dynamic policies. Break-glass procedure tested. Cross-tenant federation governed.","Zero-trust architecture. Continuous access evaluation. Automated privilege right-sizing. UBA in place."]},
+  {id:"s2",title:"Data classification & protection",guide:"How comprehensively is data classified and protected at rest and in transit?",levels:["No data classification. PII stored in plaintext. No encryption policy enforced.","Some classification exists informally. Encryption partial. PII not consistently masked.","Full sensitivity taxonomy applied. Column-level security. AES-256 at rest. TLS 1.2+ in transit.","LLM-automated classification across catalog. CEII/PII/GDPR/CCPA controls verified quarterly.","Dynamic data masking, automated classification propagation, regulatory compliance verified continuously."]},
+  {id:"s3",title:"Audit, compliance & cybersecurity",guide:"How mature is the security posture covering audit, pen testing, and threat detection?",levels:["No audit logging. No pen testing. No SIEM. Security reactive and underfunded.","Some audit logging. Informal security reviews. SIEM not integrated with warehouse events.","Immutable audit logs. Annual pen test. SIEM integration for warehouse events. DLP controls on egress.","Vulnerability scanning weekly. Threat modelling for new flows. Insider threat detection via UBA.","Continuous security monitoring. Automated threat response. Zero-day vulnerability program. SOC integration."]},
+]},
+{id:"org",name:"Organisation & Culture",icon:"👥",criteria:[
+  {id:"o1",title:"Executive sponsorship & data strategy",guide:"How strong is executive commitment to data and BI as a strategic capability?",levels:["No executive sponsor. BI treated as an IT cost. No enterprise data strategy.","Some executive awareness. Data strategy discussed but not funded or formalised.","Named executive sponsor. Multi-year data strategy published. Data included in enterprise planning.","CDO or equivalent. Data strategy funded and executed. Board-level data risk reporting in place.","Data as a strategic asset. BI as competitive advantage. Data culture embedded in corporate objectives."]},
+  {id:"o2",title:"Team structure & capability",guide:"How effectively is the data and BI team structured and staffed?",levels:["No dedicated data team. BI built by IT generalists. No data-specific roles.","Small data team with limited skills. Roles not clearly defined. High dependency on contractors.","Defined roles: Data Engineer, Data Architect, DBA, DQA, Reporting Developer, Governance Analyst.","High-performing cross-functional team. Succession planning. Skills development plan. Low attrition.","Data mesh team structure. Domain-embedded data engineers. Centre of excellence. Talent pipeline."]},
+  {id:"o3",title:"Data-driven culture",guide:"How data-driven is the broader organisational culture?",levels:["Data avoided in decisions. HiPPO culture dominant. Data team seen as order-takers.","Some teams use data. Others resistant. Data literacy training not formalised.","Quarterly training programme. Data champion network. Community of practice established.","Data literacy measured annually. Culture surveys show data-driven improvement.","Fully data-driven culture. Self-service analytics normal. Data team as strategic partner, not IT support."]},
+  {id:"o4",title:"Change management & adoption",guide:"How effectively are new BI tools, processes, and data products adopted?",levels:["No change management. New tools deployed without training. Low adoption.","Ad hoc training provided. Adoption measured informally. Resistance not actively addressed.","Structured change management for all major deployments. Training, comms, and adoption tracking.","Adoption KPIs defined per initiative. Champions network accelerates uptake. Resistance addressed.","Continuous adoption measurement. Feedback loops drive product improvement. Net Promoter Score for BI."]},
+]},
+{id:"operations",name:"Operations & Observability",icon:"⚙️",criteria:[
+  {id:"op1",title:"Pipeline monitoring & alerting",guide:"How comprehensive and proactive is pipeline health monitoring?",levels:["No monitoring. Failures discovered when business users report missing data.","Basic email alerts on pipeline failure. No SLA monitoring. Reactive operations.","Operations health dashboard. SLA monitoring per pipeline. Proactive staleness alerting to consumers.","Statistical volume anomaly detection. SLA breach prediction (early warning before miss). UBA active.","Fully automated observability: self-healing pipelines, auto-remediation, zero-manual-intervention target."]},
+  {id:"op2",title:"Incident management & post-mortems",guide:"How mature is the incident management process for data issues?",levels:["No incident process. Issues handled ad hoc. No post-mortems. No SLAs.","Incidents tracked informally. Some post-mortems conducted. No formal severity classification.","P1-P4 severity classification with SLAs. Runbooks for all critical pipelines. Post-mortems for P1/P2.","Blameless post-mortems published. Corrective actions tracked. Correction notices issued to consumers.","Predictive incident detection. Automated runbook execution for known patterns. MTTD/MTTR tracked."]},
+  {id:"op3",title:"Cost governance & efficiency",guide:"How well is warehouse cost managed, monitored, and optimised?",levels:["No cost monitoring. Warehouse costs unknown until bill arrives. No tagging.","Some cost awareness. Basic tagging. No workload isolation or cost allocation.","Cost monitoring dashboard. Budget alerts. Auto-suspend/resume. Monthly top-10 query optimisation.","Cost allocated by team. Anomaly detection. Egress quotas. 90-day capacity forecast maintained.","Full FinOps practice: automated rightsizing, storage tiering, cost-per-insight tracking, ROI measurement."]},
+  {id:"op4",title:"Continuous improvement & maturity measurement",guide:"How systematically does the organisation measure and improve BI maturity?",levels:["No maturity measurement. No continuous improvement process. Reactive to crises.","Informal retrospectives. Some improvement initiatives. Not tracked or measured.","Quarterly maturity assessment. Improvement roadmap published. Lowest-scoring domains prioritised.","Year-on-year maturity improvement tracked. OKRs tied to maturity targets. Third-party audit annually.","Automated maturity scoring. Continuous benchmarking against industry. Innovation pipeline maintained."]},
+]},
+];
+
+const RECS = {
+  1:{label:"Reactive",actions:["Establish a data governance charter and name a Data Steward for each critical domain","Select a single enterprise BI tool and mandate its use — retire shadow tools","Define the first 10 certified KPIs with unambiguous formulas and publish them","Build a Bronze/Silver/Gold layered architecture — stop analysts querying raw tables directly","Instrument basic pipeline monitoring — alert on failure, not on business user complaint","Enforce MFA across all BI and data warehouse access — no exceptions"]},
+  2:{label:"Emerging",actions:["Implement automated DQ scorecards for the top 5 critical datasets","Launch self-service analytics training for business users — measure adoption","Migrate to version-controlled pipeline code in Git with basic CI/CD tests","Establish a monthly data governance council with defined agenda and decision log","Deploy a data catalog with at least 70% asset coverage and automated lineage","Define and publish freshness SLAs for all critical datasets"]},
+  3:{label:"Defined",actions:["Deploy LLM-assisted catalog automation for security classification across all data fields","Launch a data literacy programme and establish a data champion network","Build a unified semantic layer to govern KPI definitions across all BI tools","Implement incident runbooks for all critical pipelines and conduct quarterly DR tests","Advance to Just-In-Time access provisioning for all elevated permissions","Pilot a GenAI or ML use case with proper model cards and human-in-the-loop governance"]},
+  4:{label:"Managed",actions:["Design and partially implement a data mesh model for your highest-volume domains","Deploy predictive SLA breach detection — alert before, not after, the miss","Implement A/B testing framework for operational and product decisions","Commission an independent third-party data governance audit and publish findings","Advance AI governance: model inventory, drift monitoring, and automated risk assessment","Implement FinOps practices: cost allocation by team, automated rightsizing, ROI per dataset"]},
+  5:{label:"Optimised",actions:["Focus on continuous benchmarking against industry peers and publishing maturity progress to the board","Drive full autonomous decision-making for defined operational use cases","Expand data mesh ownership across all business domains","Publish BI maturity progress to the board as a quarterly strategic capability metric","Invest in next-generation AI/ML capabilities as competitive differentiation","Establish an innovation pipeline for emerging BI capabilities (real-time, embedded AI, graph analytics)"]},
+};
+
+const BAR_COLS = ["","#E24B4A","#BA7517","#888780","#1D9E75","#2E5090"];
+const LVL_NAMES = ["","Reactive","Emerging","Defined","Managed","Optimised"];
+
+const scores = {};
+let totalAnswered = 0;
+const totalQ = DIMS.reduce((s,d)=>s+d.criteria.length,0);
+DIMS.forEach(d=>d.criteria.forEach(c=>scores[c.id]=0));
+
+function buildAssessment() {
+  const body = document.getElementById('assessment-body');
+  body.innerHTML = '';
+  DIMS.forEach(dim => {
+    const el = document.createElement('div');
+    el.className = 'dim-block';
+    el.id = 'dim-block-' + dim.id;
+    el.innerHTML = `<div class="dim-hdr" id="dim-hdr-${dim.id}" onclick="toggleDim('${dim.id}')">
+      <div class="dim-hdr-left">
+        <span class="dim-icon">${dim.icon}</span>
+        <div><div class="dim-hdr-title">${dim.name}</div><div class="dim-hdr-sub">${dim.criteria.length} criteria</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dim-pill" id="pill-${dim.id}">Not started</span>
+        <span class="chev">▼</span>
+      </div>
+    </div>
+    <div class="dim-body" id="body-${dim.id}">
+      ${dim.criteria.map(c=>`<div class="criterion">
+        <div class="crit-title">${c.title}</div>
+        <div class="crit-guide">${c.guide}</div>
+        <div class="level-btns">
+          ${c.levels.map((l,i)=>`<button class="lvl-btn" id="btn-${c.id}-${i+1}" onclick="setScore('${c.id}',${i+1},'${dim.id}')"><span class="lvl-num">L${i+1}</span> — ${l}</button>`).join('')}
+        </div>
+      </div>`).join('')}
+    </div>`;
+    body.appendChild(el);
+  });
+}
+
+function toggleDim(id) {
+  const body = document.getElementById('body-'+id);
+  const hdr = document.getElementById('dim-hdr-'+id);
+  body.classList.toggle('open');
+  hdr.classList.toggle('expanded');
+}
+
+function openDim(id) {
+  const body = document.getElementById('body-'+id);
+  const hdr = document.getElementById('dim-hdr-'+id);
+  if (!body.classList.contains('open')) { body.classList.add('open'); hdr.classList.add('expanded'); }
+  setTimeout(()=>document.getElementById('dim-block-'+id).scrollIntoView({behavior:'smooth'}),100);
+}
+
+function setScore(critId, level, dimId) {
+  const wasAnswered = scores[critId] > 0;
+  scores[critId] = level;
+  if (!wasAnswered) { totalAnswered++; }
+  for (let i=1;i<=5;i++) { const b=document.getElementById(`btn-${critId}-${i}`); if(b) b.className='lvl-btn'+(i===level?` sel-${level}`:''); }
+  updateProgress();
+  updatePill(dimId);
+}
+
+function updateProgress() {
+  const pct = Math.round((totalAnswered/totalQ)*100);
+  ['prog-bar-fill','prog-mini-fill'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.width=pct+'%'; });
+  ['prog-count-main'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=`${totalAnswered} / ${totalQ} answered`; });
+  const ml = document.getElementById('prog-mini-label'); if(ml) ml.textContent=`${totalAnswered} / ${totalQ} answered`;
+}
+
+function updatePill(dimId) {
+  const dim = DIMS.find(d=>d.id===dimId);
+  const answered = dim.criteria.filter(c=>scores[c.id]>0);
+  const pill = document.getElementById('pill-'+dimId);
+  if (!pill) return;
+  if (answered.length===0) { pill.textContent='Not started'; pill.style.background=''; pill.style.color=''; return; }
+  const avg = (answered.reduce((s,c)=>s+scores[c.id],0)/dim.criteria.length).toFixed(1);
+  const lvl = Math.round(parseFloat(avg));
+  const cols = {1:'#fde8e8',2:'#fff3cd',3:'#f0f0f0',4:'#d4edda',5:'#cce5ff'};
+  const tcols = {1:'#842029',2:'#664d03',3:'#444',4:'#0f5132',5:'#084298'};
+  pill.textContent=`Avg ${avg}/5 · ${answered.length}/${dim.criteria.length} done`;
+  pill.style.background=cols[lvl]||'#f0f0f0';
+  pill.style.color=tcols[lvl]||'#444';
+}
+
+function getDimScore(dim) {
+  const answered=dim.criteria.filter(c=>scores[c.id]>0);
+  if(answered.length===0) return null;
+  return answered.reduce((s,c)=>s+scores[c.id],0)/dim.criteria.length;
+}
+
+function getOverall() {
+  const ss=DIMS.map(d=>getDimScore(d)).filter(s=>s!==null);
+  if(ss.length===0) return null;
+  return ss.reduce((a,b)=>a+b,0)/ss.length;
+}
+
+function resetAll() {
+  Object.keys(scores).forEach(k=>scores[k]=0);
+  totalAnswered=0;
+  buildAssessment();
+  updateProgress();
+  DIMS.forEach(d=>updatePill(d.id));
+}
+
+function buildResults() {
+  const overall=getOverall();
+  const body=document.getElementById('results-body');
+  if(!overall) { body.innerHTML='<div style="padding:2rem;text-align:center;color:#888;font-size:14px">Complete at least one dimension in the assessment to see your results.</div>'; return; }
+  const lvl=Math.round(overall);
+  const pct=Math.round((overall/5)*100);
+  const answeredDims=DIMS.filter(d=>getDimScore(d)!==null);
+  const gaps=[...answeredDims].map(d=>({dim:d,score:getDimScore(d)})).sort((a,b)=>a.score-b.score);
+
+  let html=`<div class="results-stats">
+    <div class="rstat"><div class="rstat-val">${overall.toFixed(1)}</div><div class="rstat-label">Overall score / 5.0</div></div>
+    <div class="rstat"><div class="rstat-val" style="font-size:18px;padding-top:5px">${LVL_NAMES[lvl]}</div><div class="rstat-label">Maturity level ${lvl}</div></div>
+    <div class="rstat"><div class="rstat-val">${pct}%</div><div class="rstat-label">Maturity index</div></div>
+    <div class="rstat"><div class="rstat-val">${answeredDims.length}/${DIMS.length}</div><div class="rstat-label">Dimensions assessed</div></div>
+  </div>`;
+
+  html+=`<div class="panel"><div class="panel-title">📊 Score by dimension</div>`;
+  answeredDims.forEach(dim=>{
+    const s=getDimScore(dim);
+    const p=Math.round((s/5)*100);
+    const cl=Math.round(s);
+    html+=`<div class="dim-result-row">
+      <div class="drr-name">${dim.icon} ${dim.name}</div>
+      <div class="drr-bar-bg"><div class="drr-bar-fill" style="width:${p}%;background:${BAR_COLS[cl]}"></div></div>
+      <div class="drr-score" style="color:${BAR_COLS[cl]}">${s.toFixed(1)}</div>
+      <div class="drr-level">${LVL_NAMES[cl]}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  if(gaps.length>0) {
+    html+=`<div class="panel"><div class="panel-title">⚠️ Priority improvement areas (lowest scoring)</div>`;
+    gaps.slice(0,3).forEach(({dim,score})=>{
+      const lv=Math.round(score);
+      const next=Math.min(5,lv+1);
+      const rec=RECS[lv]||RECS[1];
+      const bgcols={1:'#fde8e8',2:'#fff3cd',3:'#f0f0f0',4:'#d4edda',5:'#cce5ff'};
+      const tcols={1:'#842029',2:'#664d03',3:'#444',4:'#0f5132',5:'#084298'};
+      html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #eee">
+        <div class="rec-dim-hdr">
+          <span style="font-size:16px">${dim.icon}</span>
+          <span style="font-size:13px;font-weight:600;color:#1F3864">${dim.name}</span>
+          <span class="rec-pill" style="background:${bgcols[lv]};color:${tcols[lv]}">Level ${lv} — ${rec.label}</span>
+          <span style="font-size:11px;color:#888;margin-left:4px">→ target Level ${next}</span>
+        </div>
+        <div class="rec-body">To advance from Level ${lv} to Level ${next}, focus on:</div>
+        <div class="rec-actions">${rec.actions.map(a=>`<div class="rec-action"><span class="rec-arrow">→</span>${a}</div>`).join('')}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  const overallRec=RECS[lvl]||RECS[1];
+  html+=`<div class="panel"><div class="panel-title">💡 Overall recommendation — Level ${lvl}: ${overallRec.label}</div>
+    <div class="rec-body" style="margin-bottom:10px">At Level ${lvl}, advance to Level ${Math.min(5,lvl+1)} by prioritising:</div>
+    ${overallRec.actions.map(a=>`<div class="rec-action"><span class="rec-arrow">→</span>${a}</div>`).join('')}
+  </div>`;
+
+  html+=`<div style="margin-top:4px">
+    <button class="btn btn-primary" onclick="showSection('assess')">← Back to Assessment</button>
+    <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
+  </div>`;
+
+  body.innerHTML=html;
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.snav-item').forEach(s=>s.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  const idx={overview:0,assess:1,results:2}[id];
+  document.querySelectorAll('.snav-item')[idx].classList.add('active');
+  if(id==='results') buildResults();
+}
+
+buildAssessment();
+</script>
+</body>
+</html>

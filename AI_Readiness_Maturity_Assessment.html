@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Readiness Maturity Assessment</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --purple: #4B3B8C;
+    --purple-lt: #EDE9FF;
+    --purple-mid: #9B8FD4;
+    --teal: #0F6E56;
+    --teal-lt: #E1F5EE;
+    --amber: #BA7517;
+    --amber-lt: #FFF2CC;
+    --red: #E24B4A;
+    --red-lt: #FCE4D6;
+    --red-dk: #843C0C;
+    --gray: #5F5E5A;
+    --gray-lt: #F2F2F2;
+    --gray-mid: #D3D1C7;
+    --white: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: #e0ddd6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f2f9; color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  .app-header { background: linear-gradient(135deg, #1F3864 0%, #4B3B8C 100%); color: white; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .app-title { font-size: 18px; font-weight: 600; }
+  .app-sub { font-size: 12px; opacity: .75; margin-top: 3px; }
+  .header-badge { background: rgba(255,255,255,.15); border-radius: 20px; padding: 4px 14px; font-size: 11px; }
+  .header-right { text-align: right; }
+  .ai-chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.12); border-radius: 20px; padding: 4px 12px; font-size: 11px; margin-top: 4px; }
+
+  .layout { display: flex; min-height: calc(100vh - 68px); }
+  .sidebar { width: 230px; background: white; border-right: 1px solid var(--border); flex-shrink: 0; padding: 16px 0; }
+  .main { flex: 1; padding: 24px 28px; overflow-y: auto; max-width: 980px; }
+
+  .snav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); padding: 6px 16px 4px; }
+  .snav-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--text-muted); border-left: 3px solid transparent; transition: all .15s; }
+  .snav-item:hover { background: var(--gray-lt); color: var(--text); }
+  .snav-item.active { background: var(--purple-lt); color: var(--purple); border-left-color: var(--purple); font-weight: 500; }
+  .snav-icon { font-size: 15px; width: 20px; text-align: center; }
+  .snav-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+  .prog-mini { margin: 12px 16px 0; }
+  .prog-mini-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .prog-mini-fill { height: 4px; background: var(--purple); border-radius: 2px; transition: width .3s; }
+  .prog-mini-label { font-size: 10px; color: var(--text-muted); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+  .page-title { font-size: 20px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.55; }
+
+  /* Level cards */
+  .level-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px; }
+  .lcard { border-radius: 10px; padding: 14px 12px; text-align: center; border: 1px solid var(--border); }
+  .lcard-num { font-size: 28px; font-weight: 700; }
+  .lcard-name { font-size: 12px; font-weight: 600; margin: 4px 0; }
+  .lcard-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .lc1 { background: #fff5f5; } .lc1 .lcard-num, .lc1 .lcard-name { color: var(--red); }
+  .lc2 { background: var(--amber-lt); } .lc2 .lcard-num, .lc2 .lcard-name { color: var(--amber); }
+  .lc3 { background: var(--gray-lt); } .lc3 .lcard-num, .lc3 .lcard-name { color: var(--gray); }
+  .lc4 { background: var(--teal-lt); } .lc4 .lcard-num, .lc4 .lcard-name { color: var(--teal); }
+  .lc5 { background: var(--purple-lt); } .lc5 .lcard-num, .lc5 .lcard-name { color: var(--purple); }
+
+  /* Dimension overview */
+  .dim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .dov { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 14px; border-left: 3px solid var(--purple); }
+  .dov-title { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 5px; display: flex; align-items: center; gap: 7px; }
+  .dov-desc { font-size: 12px; color: var(--text-muted); line-height: 1.45; }
+
+  /* Assessment */
+  .dim-block { background: white; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+  .dim-hdr { padding: 12px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: white; transition: background .15s; }
+  .dim-hdr:hover { background: var(--gray-lt); }
+  .dim-hdr-left { display: flex; align-items: center; gap: 10px; }
+  .dim-icon { font-size: 18px; }
+  .dim-hdr-title { font-size: 14px; font-weight: 600; color: var(--navy); }
+  .dim-hdr-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .dim-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--gray-lt); color: var(--text-muted); font-weight: 500; }
+  .dim-body { display: none; border-top: 1px solid var(--border); padding: 16px; }
+  .dim-body.open { display: block; }
+  .chev { font-size: 12px; color: var(--text-muted); transition: transform .2s; margin-left: 4px; }
+  .dim-hdr.expanded .chev { transform: rotate(180deg); }
+
+  /* Criterion */
+  .criterion { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .criterion:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .crit-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .crit-guide { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-style: italic; line-height: 1.45; }
+  .crit-ask { font-size: 11px; color: var(--purple); margin-bottom: 10px; line-height: 1.4; }
+  .level-btns { display: flex; flex-direction: column; gap: 5px; }
+  .lvl-btn { text-align: left; padding: 8px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text-muted); transition: all .12s; line-height: 1.4; }
+  .lvl-btn:hover { background: var(--gray-lt); border-color: var(--gray-mid); color: var(--text); }
+  .lvl-btn.sel-1 { background: #fff0f0; border-color: var(--red); color: #6b1818; font-weight: 500; }
+  .lvl-btn.sel-2 { background: var(--amber-lt); border-color: var(--amber); color: #5a3800; font-weight: 500; }
+  .lvl-btn.sel-3 { background: var(--gray-lt); border-color: var(--gray-mid); color: var(--gray); font-weight: 500; }
+  .lvl-btn.sel-4 { background: var(--teal-lt); border-color: var(--teal); color: #0a4535; font-weight: 500; }
+  .lvl-btn.sel-5 { background: var(--purple-lt); border-color: var(--purple); color: #2d1f6e; font-weight: 500; }
+  .lvl-num { font-weight: 700; margin-right: 5px; }
+
+  /* Progress */
+  .prog-bar-wrap { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .prog-bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .prog-bar-fill { height: 8px; background: var(--purple); border-radius: 4px; transition: width .3s; }
+  .prog-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .prog-count { font-size: 12px; font-weight: 600; color: var(--navy); white-space: nowrap; min-width: 80px; text-align: right; }
+
+  /* Results */
+  .results-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .rstat { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .rstat-val { font-size: 28px; font-weight: 700; color: var(--navy); }
+  .rstat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); margin-top: 3px; }
+  .dim-result-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .dim-result-row:last-child { border-bottom: none; }
+  .drr-name { font-size: 12px; font-weight: 500; color: var(--text); min-width: 230px; }
+  .drr-bar-bg { flex: 1; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+  .drr-bar-fill { height: 10px; border-radius: 5px; transition: width .6s; }
+  .drr-score { font-size: 12px; font-weight: 700; min-width: 36px; text-align: right; }
+  .drr-level { font-size: 10px; color: var(--text-muted); min-width: 70px; }
+  .panel { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .panel-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+  .rec-dim-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .rec-pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .rec-body { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .rec-action { display: flex; gap: 7px; font-size: 12px; color: var(--text-muted); padding: 3px 0; line-height: 1.45; }
+  .rec-arrow { color: var(--purple); flex-shrink: 0; font-weight: 700; }
+  .ask-box { background: var(--purple-lt); border-radius: 8px; padding: 10px 14px; margin-top: 10px; }
+  .ask-box-title { font-size: 11px; font-weight: 600; color: var(--purple); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .ask-item { font-size: 12px; color: #3a2a7a; padding: 2px 0; line-height: 1.4; }
+
+  /* Readiness badge */
+  .readiness-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+
+  .btn { padding: 8px 16px; font-size: 13px; border-radius: 7px; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text); font-weight: 500; transition: all .15s; margin-right: 8px; margin-top: 8px; }
+  .btn:hover { background: var(--gray-lt); }
+  .btn-primary { background: var(--purple); color: white; border-color: var(--purple); }
+  .btn-primary:hover { background: #3a2a7a; border-color: #3a2a7a; }
+
+  @media print { .sidebar, .app-header { display: none; } .main { padding: 0; } }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <div class="app-title">AI Readiness Maturity Assessment Framework</div>
+    <div class="app-sub">9 dimensions · 45 criteria · 5 readiness levels · Enterprise AI adoption assessment</div>
+  </div>
+  <div class="header-right">
+    <div class="header-badge">Nicolas Raad — Data Consulting Group</div>
+    <div class="ai-chip">🤖 AI & Data Leadership</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="snav-label">Navigation</div>
+    <div class="snav-item active" onclick="showSection('overview')"><span class="snav-icon">📋</span>Overview</div>
+    <div class="snav-item" onclick="showSection('assess')"><span class="snav-icon">✅</span>Assessment</div>
+    <div class="snav-item" onclick="showSection('results')"><span class="snav-icon">📊</span>Results</div>
+    <div class="snav-divider"></div>
+    <div class="snav-label">Dimensions</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('data')"><span class="snav-icon">🏗</span>Data Foundation</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('infra')"><span class="snav-icon">☁️</span>Infrastructure</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('talent')"><span class="snav-icon">👥</span>Talent & Skills</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('strategy')"><span class="snav-icon">🎯</span>Strategy & Vision</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('governance')"><span class="snav-icon">🛡</span>AI Governance</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('mlops')"><span class="snav-icon">⚙️</span>MLOps & Engineering</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('use_cases')"><span class="snav-icon">🚀</span>Use Cases & Value</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('culture')"><span class="snav-icon">🌱</span>Culture & Change</div>
+    <div class="snav-item" onclick="showSection('assess');openDim('security')"><span class="snav-icon">🔐</span>Security & Ethics</div>
+    <div class="snav-divider"></div>
+    <div class="prog-mini">
+      <div class="prog-mini-label" id="prog-mini-label">0 / 45 answered</div>
+      <div class="prog-mini-bar"><div class="prog-mini-fill" id="prog-mini-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div id="section-overview" class="section active">
+      <div class="page-title">AI Readiness Maturity Framework</div>
+      <div class="page-sub">This framework assesses your organisation's readiness to adopt, scale, and govern Artificial Intelligence across 9 dimensions and 45 criteria. Each dimension is scored 1–5. The combined score produces a readiness level with targeted improvement recommendations.</div>
+
+      <div class="level-row">
+        <div class="lcard lc1"><div class="lcard-num">1</div><div class="lcard-name">Unaware</div><div class="lcard-desc">No AI strategy. Minimal data. AI seen as hype. No organisational readiness.</div></div>
+        <div class="lcard lc2"><div class="lcard-num">2</div><div class="lcard-name">Exploring</div><div class="lcard-desc">AI interest sparked. Pilots underway. Skills gaps large. No production AI.</div></div>
+        <div class="lcard lc3"><div class="lcard-num">3</div><div class="lcard-name">Developing</div><div class="lcard-desc">First production AI deployed. Governance emerging. Data foundation improving.</div></div>
+        <div class="lcard lc4"><div class="lcard-num">4</div><div class="lcard-name">Scaling</div><div class="lcard-desc">Multiple AI use cases in production. MLOps in place. AI driving business value.</div></div>
+        <div class="lcard lc5"><div class="lcard-num">5</div><div class="lcard-name">Leading</div><div class="lcard-desc">AI as competitive advantage. Continuous innovation. Responsible AI embedded.</div></div>
+      </div>
+
+      <div class="dim-grid">
+        <div class="dov"><div class="dov-title">🏗 1. Data Foundation & Quality</div><div class="dov-desc">AI-ready data pipelines, data quality for ML, feature engineering infrastructure, and the availability of labelled training data across critical domains.</div></div>
+        <div class="dov"><div class="dov-title">☁️ 2. Technology Infrastructure</div><div class="dov-desc">Compute (GPU/cloud), storage scalability, ML platform maturity, real-time data serving capability, and ability to deploy and serve models at scale.</div></div>
+        <div class="dov"><div class="dov-title">👥 3. Talent & Skills</div><div class="dov-desc">Data science capability, ML engineering skills, domain expertise paired with AI fluency, leadership AI literacy, and talent pipeline maturity.</div></div>
+        <div class="dov"><div class="dov-title">🎯 4. Strategy & Executive Vision</div><div class="dov-desc">AI as a strategic priority, executive sponsorship, funded AI roadmap, clear use case prioritisation, and measurable AI value targets.</div></div>
+        <div class="dov"><div class="dov-title">🛡 5. AI Governance & Risk</div><div class="dov-desc">AI policy framework, model risk management, regulatory compliance, responsible AI principles, bias and fairness controls, and AI audit capability.</div></div>
+        <div class="dov"><div class="dov-title">⚙️ 6. MLOps & AI Engineering</div><div class="dov-desc">Model lifecycle management, CI/CD for ML, feature stores, model monitoring, drift detection, retraining pipelines, and production deployment maturity.</div></div>
+        <div class="dov"><div class="dov-title">🚀 7. Use Cases & Business Value</div><div class="dov-desc">Breadth and depth of AI use cases in production, value realisation measurement, ROI tracking, and the maturity of the AI innovation pipeline.</div></div>
+        <div class="dov"><div class="dov-title">🌱 8. Culture & Change Management</div><div class="dov-desc">Organisational openness to AI, change management for AI adoption, AI literacy programmes, shadow AI risk management, and data-driven decision culture.</div></div>
+        <div class="dov"><div class="dov-title">🔐 9. Security, Privacy & Ethics</div><div class="dov-desc">AI-specific security controls, data privacy in model training, LLM prompt injection defences, adversarial robustness, and ethical AI enforcement.</div></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="showSection('assess')">Start Assessment →</button>
+    </div>
+
+    <!-- ASSESSMENT -->
+    <div id="section-assess" class="section">
+      <div class="page-title">Assessment</div>
+      <div class="page-sub">For each criterion, select the level that best describes your organisation's current AI readiness. Be honest — the value is in identifying real gaps.</div>
+
+      <div class="prog-bar-wrap">
+        <div class="prog-label">Progress</div>
+        <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-bar-fill" style="width:0%"></div></div>
+        <div class="prog-count" id="prog-count-main">0 / 45 answered</div>
+      </div>
+
+      <div id="assessment-body"></div>
+
+      <button class="btn btn-primary" onclick="showSection('results')" style="margin-top:12px">View Results →</button>
+      <button class="btn" onclick="resetAll()" style="margin-top:12px">Reset All</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="section-results" class="section">
+      <div class="page-title">AI Readiness Results</div>
+      <div class="page-sub">Your organisation's AI readiness score across all dimensions, with prioritised recommendations.</div>
+      <div id="results-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DIMS = [
+{id:"data", name:"Data Foundation & Quality", icon:"🏗", criteria:[
+  {id:"d1", title:"AI-ready data pipeline architecture",
+   guide:"How well does your data infrastructure support AI and ML workloads?",
+   ask:"Do you have a governed Bronze/Silver/Gold architecture? Are pipelines idempotent and monitored? Is data freshness tracked?",
+   levels:["No structured data pipelines. Data siloed in operational systems. No data warehouse.",
+           "Some data pipelines exist but inconsistent. Data quality unpredictable. No ML-optimised layer.",
+           "Governed data warehouse with Bronze/Silver/Gold layers. Pipelines reliable. ML-ready datasets emerging.",
+           "Feature-engineered datasets available. Real-time and batch pipelines co-exist. Data contracts in place.",
+           "Fully automated AI-ready data platform. Feature store in production. Data mesh principles applied."]},
+  {id:"d2", title:"Data quality for ML — completeness, accuracy, timeliness",
+   guide:"How trustworthy and complete is your data for training and serving AI models?",
+   ask:"What is your average completeness score on critical datasets? Are DQ scorecards published? Do you have a golden record baseline?",
+   levels:["Data quality unknown. No DQ measurement. Analysts spend >50% of time cleaning data.",
+           "Some DQ checks exist. Quality issues common. No automated scorecards. Reactive remediation.",
+           "Automated DQ rules across DAMA dimensions. Scorecards published. DQ index per dataset established.",
+           "99%+ data quality on Tier-1 datasets. Proactive remediation. DQ gating before model training.",
+           "AI model inputs validated automatically. Drift in training data detected. Data lineage end-to-end."]},
+  {id:"d3", title:"Training data availability and labelling",
+   guide:"Do you have sufficient labelled, representative training data for your target AI use cases?",
+   ask:"How much labelled data exists per use case? What is the labelling process and cost? Is synthetic data generation in use?",
+   levels:["No labelled data. No understanding of what training data is needed for target use cases.",
+           "Some historical data exists but unlabelled. No systematic labelling process or budget.",
+           "Labelling workflows defined for 1-2 use cases. Human-in-the-loop labelling process in place.",
+           "Active learning reduces labelling burden. Multiple labelled datasets across domains. Quality audited.",
+           "Synthetic data generation supplements real data. Continuous labelling pipeline. Domain experts engaged."]},
+  {id:"d4", title:"Data governance and lineage for AI",
+   guide:"How well is data governance applied specifically to AI training data and model inputs?",
+   ask:"Is training data catalogued with lineage? Are data sources approved for AI use? Is PII anonymised before model training?",
+   levels:["No governance on data used for AI. Training datasets built ad hoc with no documentation.",
+           "Some awareness of governance needs for AI data. No formal process. PII risks not systematically addressed.",
+           "Training data catalogued. Source approval process exists. PII anonymised. Lineage tracked to model.",
+           "Data contracts for AI datasets. Bias in training data assessed. Regulatory compliance verified.",
+           "Automated AI data governance. Bias monitoring in production. Data provenance tracked end-to-end."]},
+  {id:"d5", title:"Feature engineering and feature store",
+   guide:"How mature is your feature engineering capability and feature reuse infrastructure?",
+   ask:"Do you have a feature store? Are features versioned and shared across teams? Is feature drift monitored?",
+   levels:["No feature engineering process. Each model builds features from scratch with no reuse.",
+           "Ad hoc feature engineering per project. No standardisation. Features not shared across teams.",
+           "Feature engineering documented per model. Some reuse emerging. No formal feature store.",
+           "Feature store in production. Features versioned and shared. Feature lineage tracked.",
+           "Automated feature discovery. Feature drift monitored. Online and offline feature serving unified."]},
+]},
+
+{id:"infra", name:"Technology Infrastructure", icon:"☁️", criteria:[
+  {id:"i1", title:"Compute — GPU, cloud, and scalability",
+   guide:"Does your organisation have access to sufficient compute for AI training and inference?",
+   ask:"Do you have GPU access? Is compute elastic and on-demand? What is the cost model for AI compute?",
+   levels:["No GPU access. All compute on-premises CPU only. Cannot run modern ML workloads.",
+           "Limited GPU access via cloud but no governed process. Compute is a bottleneck to AI work.",
+           "Cloud GPU available on-demand. Cost controls in place. Training jobs can scale to need.",
+           "Multi-cloud compute strategy. Spot/preemptible instances optimise cost. Distributed training supported.",
+           "Automated compute orchestration. Cost-optimised training pipelines. Inference latency SLAs met."]},
+  {id:"i2", title:"ML platform and experiment tracking",
+   guide:"Do you have a unified ML platform for experimentation, training, and model management?",
+   ask:"What ML platform is in use (MLflow, Vertex AI, SageMaker, Azure ML)? Is experiment tracking automated? Can experiments be reproduced?",
+   levels:["No ML platform. Experiments run in local notebooks. No tracking. Not reproducible.",
+           "Some experiment tracking in place (MLflow, W&B) but not standardised or mandated.",
+           "Standard ML platform selected. Experiment tracking mandatory. Model registry in use.",
+           "End-to-end ML platform: data → experiment → training → registry → deployment → monitoring.",
+           "Unified ML platform with automated hyperparameter tuning, pipeline orchestration, and cost optimisation."]},
+  {id:"i3", title:"Real-time inference and model serving",
+   guide:"Can your infrastructure serve AI model predictions in real time at production scale?",
+   ask:"What is the P99 inference latency for your production models? Can serving scale automatically? Is A/B traffic splitting supported?",
+   levels:["No model serving infrastructure. Models run as batch scripts. No real-time inference capability.",
+           "Models served via basic REST APIs. No auto-scaling. Latency not monitored. Single model version.",
+           "Model serving with auto-scaling. Latency monitored. Blue/green deployment supported.",
+           "Low-latency inference (<100ms P99). A/B traffic splitting. Champion/challenger framework.",
+           "Edge inference where needed. Adaptive batching. Inference cost optimised. Global serving."]},
+  {id:"i4", title:"Data and model storage scalability",
+   guide:"Can your storage infrastructure handle the volume and variety of data needed for AI?",
+   ask:"What is the cost per TB of AI training data stored? Can storage scale to petabytes? Is model artefact versioning in place?",
+   levels:["Storage is a constraint. Petabyte-scale data not feasible. Model artefacts not versioned.",
+           "Cloud storage available but not optimised for AI. No storage tiering. Model artefacts manually managed.",
+           "Scalable object storage (S3/ADLS/GCS) with tiering. Model artefacts versioned in registry.",
+           "Unified data lakehouse. Storage costs tracked per AI project. Data lifecycle policies automated.",
+           "Storage auto-tiered by access frequency. Cost per model tracked. Distributed storage for training."]},
+]},
+
+{id:"talent", name:"Talent & Skills", icon:"👥", criteria:[
+  {id:"t1", title:"Data science and ML engineering capability",
+   guide:"Does your organisation have sufficient internal AI/ML talent to execute the strategy?",
+   ask:"How many data scientists and ML engineers do you have? What is the ratio to business domains? What is the attrition rate?",
+   levels:["No data scientists or ML engineers. AI capability does not exist internally.",
+           "1-2 data scientists. No ML engineers. Heavy reliance on external vendors for AI work.",
+           "Dedicated data science team. Some ML engineering. Clear roles defined. Hiring underway.",
+           "Cross-functional AI teams embedded in business domains. MLOps engineers present. Low attrition.",
+           "AI centre of excellence. Domain-embedded AI engineers. Strong talent pipeline. Industry-recognised."]},
+  {id:"t2", title:"AI literacy across the organisation",
+   guide:"How broadly does the organisation understand AI — its capabilities, limitations, and risks?",
+   ask:"Have business leaders completed AI training? Can non-technical staff identify AI use cases? Is AI literacy measured?",
+   levels:["AI literacy near zero. Most staff cannot explain what ML is. Executives unclear on AI's role.",
+           "Some curiosity about AI. A few champions. No formal training. Misconceptions prevalent.",
+           "AI literacy programme launched. Business leaders trained. Champions network active.",
+           "AI literacy measured annually. 60%+ of business users completed training. Improving year-on-year.",
+           "Organisation-wide AI fluency. Business teams independently identify and scope AI use cases."]},
+  {id:"t3", title:"Domain expertise paired with AI capability",
+   guide:"Is domain expertise effectively combined with AI capability to build relevant solutions?",
+   ask:"Are domain experts embedded in AI teams? Do data scientists understand the business domain? Is there a translation layer between AI and business?",
+   levels:["AI team disconnected from business. Domain experts not involved in AI projects. Models miss business context.",
+           "Ad hoc collaboration between AI and domain experts. No structured pairing. Knowledge gaps common.",
+           "Domain experts involved in problem framing and validation. Structured collaboration process.",
+           "Domain-embedded AI teams. Business translators (AI product managers) bridge technical/business divide.",
+           "Domain experts can prototype AI solutions. AI teams have deep domain fluency. Fully integrated."]},
+  {id:"t4", title:"Talent pipeline and partnerships",
+   guide:"How mature is the pipeline for acquiring and developing AI talent?",
+   ask:"What are your university partnerships? Do you have an AI apprenticeship or graduate programme? What is the cost per AI hire?",
+   levels:["No talent pipeline. AI hiring reactive and expensive. No partnerships.",
+           "Some university relationships. Occasional internships. No structured pipeline.",
+           "University partnerships active. Graduate hire programme. Internal AI training curriculum.",
+           "Dedicated AI talent acquisition team. Innovation lab attracts top talent. Retention programme.",
+           "Industry-leading employer brand for AI talent. Research partnerships. Open-source contributions."]},
+]},
+
+{id:"strategy", name:"Strategy & Executive Vision", icon:"🎯", criteria:[
+  {id:"st1", title:"AI as a strategic priority",
+   guide:"Is AI explicitly embedded in the organisation's strategy with funding and accountability?",
+   ask:"Is AI in the board-level strategic plan? Is there a funded AI budget line? Who is the executive sponsor for AI?",
+   levels:["AI not in strategic plan. No executive sponsor. Viewed as a technology experiment.",
+           "AI mentioned in strategy but not funded specifically. Executive interest but no accountability.",
+           "AI formally in strategic plan. Named executive sponsor. Dedicated AI budget approved.",
+           "CDO or CAIO appointed. AI OKRs at board level. AI investment tracked against business outcomes.",
+           "AI is a board-level competitive differentiator. Quarterly AI progress reporting. CEO-led AI agenda."]},
+  {id:"st2", title:"AI use case prioritisation and roadmap",
+   guide:"How effectively does the organisation identify, prioritise, and sequence AI investments?",
+   ask:"Is there a prioritisation framework for AI use cases? How are ROI and risk assessed? Is the AI roadmap published?",
+   levels:["No use case prioritisation. AI projects selected based on interest, not value or feasibility.",
+           "Some prioritisation discussion but informal. No structured feasibility or ROI assessment.",
+           "Structured prioritisation framework: value × feasibility × risk. AI roadmap published quarterly.",
+           "AI use case pipeline maintained. Portfolio balanced across quick wins and strategic bets.",
+           "AI investment portfolio managed like a product portfolio. Value delivered tracked against forecast."]},
+  {id:"st3", title:"AI value measurement and ROI tracking",
+   guide:"How rigorously does the organisation measure the business value delivered by AI?",
+   ask:"What metrics are used to measure AI ROI? Who reports AI value to the board? Are AI savings and revenue impacts tracked?",
+   levels:["No AI value measurement. Success defined as deploying a model, not delivering business value.",
+           "Some benefit claims made informally. No rigorous measurement methodology.",
+           "Value metrics defined per AI use case before deployment. Post-deployment measurement in place.",
+           "AI value dashboard maintained. Savings, revenue impact, and efficiency gains tracked and reported.",
+           "AI ROI tracked at portfolio level. Value per dollar of AI investment benchmarked externally."]},
+  {id:"st4", title:"Partnership and ecosystem strategy",
+   guide:"How effectively does the organisation leverage external AI partners, platforms, and ecosystems?",
+   ask:"What AI vendor relationships exist? Is there an open-source AI strategy? Are cloud AI services (Azure OpenAI, AWS Bedrock, GCP Vertex) in use?",
+   levels:["No AI partnerships. All AI built internally from scratch. No cloud AI services evaluated.",
+           "Some vendor relationships. Cloud AI services evaluated but not standardised.",
+           "Strategic AI vendor relationships. Cloud AI services in production. Open-source strategy defined.",
+           "Ecosystem of AI partners managed. Build vs buy vs partner decisions governed. Vendor risk managed.",
+           "Co-innovation with leading AI providers. Research partnerships. Contribution to open-source AI ecosystem."]},
+]},
+
+{id:"governance", name:"AI Governance & Risk", icon:"🛡", criteria:[
+  {id:"g1", title:"AI policy framework and standards",
+   guide:"Does the organisation have formal policies governing how AI is built, deployed, and monitored?",
+   ask:"Is there a published AI policy? Does it cover acceptable use, prohibited use, and risk thresholds? Who owns the policy?",
+   levels:["No AI policy. No standards. Each team makes its own decisions about AI use.",
+           "Informal AI guidelines exist but not published or enforced. Awareness patchy.",
+           "AI policy published. Covers acceptable use, prohibited use, and risk categories. Owner named.",
+           "AI policy integrated into procurement, vendor management, and product development processes.",
+           "AI policy continuously updated as technology evolves. Regulatory changes trigger automatic review."]},
+  {id:"g2", title:"AI model risk assessment and management",
+   guide:"How rigorously are AI model risks identified, documented, and managed?",
+   ask:"Is a model risk assessment conducted before every deployment? Are model cards created? Who approves high-risk models?",
+   levels:["No model risk assessment. Models deployed without documentation or review.",
+           "Ad hoc risk reviews for some models. No consistent framework or approval process.",
+           "Formal model risk assessment for all production models. Model cards created. Approval workflow.",
+           "Risk-tiered governance: high-risk models require executive sign-off. Model inventory maintained.",
+           "Continuous model risk monitoring. Automated risk scoring. Regulatory alignment verified."]},
+  {id:"g3", title:"Regulatory compliance — AI-specific regulations",
+   guide:"How prepared is the organisation for current and emerging AI regulations (EU AI Act, NIST AI RMF, ISO 42001)?",
+   ask:"Has an EU AI Act gap assessment been completed? Is ISO 42001 being pursued? Who monitors regulatory changes?",
+   levels:["No awareness of AI-specific regulations. No compliance programme.",
+           "Some awareness of EU AI Act and NIST AI RMF. No formal compliance programme.",
+           "AI regulatory compliance programme underway. Gap assessment completed. ISO 42001 pursued.",
+           "High-risk AI systems classified and documented. Conformity assessments conducted. NIST AI RMF adopted.",
+           "Full regulatory compliance. ISO 42001 certified. Proactive regulatory engagement. Audit-ready."]},
+  {id:"g4", title:"Bias, fairness, and explainability",
+   guide:"How systematically does the organisation assess and mitigate bias, ensure fairness, and provide explainability in AI outputs?",
+   ask:"Is bias testing conducted pre-deployment? Are explainability requirements defined per use case? How are fairness violations handled?",
+   levels:["Bias and fairness not considered. Models deployed without fairness assessment. Black-box outputs.",
+           "Awareness of bias risks. Some informal fairness checks. No explainability requirements.",
+           "Bias testing conducted before deployment. Fairness metrics defined per use case. XAI used where needed.",
+           "Automated bias detection in production. Fairness dashboards published. Explainability by default.",
+           "Continuous fairness monitoring. Bias incidents trigger automatic remediation. Ethical review board active."]},
+  {id:"g5", title:"Human-in-the-loop and oversight",
+   guide:"How well does the organisation maintain human oversight of consequential AI decisions?",
+   ask:"Which AI decisions require human review? Is HITL documented per use case? How are overrides logged and analysed?",
+   levels:["No human oversight of AI decisions. Fully automated decisions with no review capability.",
+           "Some manual review for high-stakes decisions but ad hoc. No documented HITL policy.",
+           "HITL requirements defined per use case. Override capability built into all production AI. Logged.",
+           "Human oversight tiered by decision risk. Override analysis used to improve models.",
+           "Adaptive HITL — oversight level adjusts based on model confidence and risk. Fully auditable."]},
+]},
+
+{id:"mlops", name:"MLOps & AI Engineering", icon:"⚙️", criteria:[
+  {id:"m1", title:"ML CI/CD and model deployment pipeline",
+   guide:"How automated and reliable is the process for moving models from development to production?",
+   ask:"Is there a CI/CD pipeline for ML? How long does model deployment take? Can deployments be rolled back?",
+   levels:["No ML CI/CD. Models deployed manually by data scientists. Slow, error-prone, irreversible.",
+           "Some automation exists but not standardised. Deployment takes days or weeks.",
+           "ML CI/CD pipeline in place. Automated testing, staging, and production promotion. Rollback possible.",
+           "Deployment pipeline includes automated model testing, shadow mode, and canary releases.",
+           "Fully automated ML CI/CD. Deployment in hours. A/B traffic management. Zero-downtime updates."]},
+  {id:"m2", title:"Model monitoring and drift detection",
+   guide:"How effectively are production models monitored for performance degradation and data drift?",
+   ask:"Are model predictions monitored in production? Is data drift detected automatically? What triggers retraining?",
+   levels:["No model monitoring. Performance degradation discovered when business outcomes decline.",
+           "Basic monitoring of model outputs. No drift detection. Retraining done on a schedule not on need.",
+           "Model performance and data drift monitored automatically. Alerts when drift exceeds thresholds.",
+           "Statistical drift detection (PSI, KL divergence). Automated retraining triggers. Monitoring dashboards.",
+           "Adaptive retraining: models retrain on drift, not calendar. Drift linked to business impact metrics."]},
+  {id:"m3", title:"Model versioning and experiment reproducibility",
+   guide:"Can the organisation reproduce any previous model version and experiment result?",
+   ask:"Are all model versions stored with metadata? Can any experiment be reproduced from scratch? Is there a model lineage graph?",
+   levels:["No model versioning. Experiments not reproducible. Code and data not linked to model outputs.",
+           "Some models versioned informally. Experiments partially reproducible. No formal standards.",
+           "All models versioned in a registry. Experiments tracked with full metadata. Reproducible.",
+           "Full model lineage: data version → code version → model version → deployment version.",
+           "Automated model provenance. Any production model traceable to training run, data, and code commit."]},
+  {id:"m4", title:"LLM and GenAI engineering practices",
+   guide:"How mature are the engineering practices for building and operating LLM-powered applications?",
+   ask:"Do you have prompt versioning in place? Is RAG architecture documented? Are LLM costs monitored per use case?",
+   levels:["No LLM engineering practices. Prompts unversioned. No cost monitoring. No guardrails.",
+           "Some LLM prototypes exist. Prompts informal. No RAG. Cost not tracked. No prompt injection defence.",
+           "LLM engineering standards defined: prompt versioning, RAG patterns, cost monitoring, basic guardrails.",
+           "LLMOps in production: prompt A/B testing, retrieval quality measurement, cost optimisation, hallucination detection.",
+           "Full LLMOps platform. Automated prompt optimisation. Adversarial robustness tested. LLM observability."]},
+  {id:"m5", title:"AI testing — unit, integration, and adversarial",
+   guide:"How comprehensive is the test coverage for AI systems before and after deployment?",
+   ask:"Are AI systems tested for edge cases, adversarial inputs, and distributional shift? Is test coverage measured?",
+   levels:["No automated testing for AI systems. Models deployed without structured test suites.",
+           "Basic functional tests exist. No adversarial testing. No distributional shift simulation.",
+           "Unit tests for data pipelines and transformations. Integration tests for model API endpoints.",
+           "Adversarial testing, edge case suites, and distributional shift simulation before production.",
+           "Continuous adversarial testing in production. Automated red-teaming. Test coverage tracked and published."]},
+]},
+
+{id:"use_cases", name:"Use Cases & Business Value", icon:"🚀", criteria:[
+  {id:"u1", title:"Breadth of AI use cases in production",
+   guide:"How many and how varied are the AI use cases running in production?",
+   ask:"How many distinct AI models are in production? What business domains do they cover? What is the ratio of pilots to production?",
+   levels:["No AI in production. All use cases in pilot or proof-of-concept stage.",
+           "1-2 AI models in production. Narrow use case. High pilot-to-production failure rate.",
+           "3-5 AI models in production across 2+ business domains. Defined path from pilot to production.",
+           "10+ AI models in production across multiple domains. High pilot success rate. Systematic scaling.",
+           "AI embedded across all major business functions. Hundreds of models. AI factory model adopted."]},
+  {id:"u2", title:"AI innovation pipeline",
+   guide:"How well-stocked and structured is the pipeline of future AI use cases?",
+   ask:"How many use cases are in the pipeline? How are ideas sourced? What is the average time from idea to pilot?",
+   levels:["No innovation pipeline. AI ideas are ad hoc and unsolicited.",
+           "Informal idea collection. No structured pipeline. Ideas lose momentum without a process.",
+           "Structured pipeline: ideation → feasibility → pilot → production. Ideas sourced from business.",
+           "Active innovation pipeline with 20+ use cases at various stages. Business teams generate ideas.",
+           "AI use case factory. Continuous ideation programme. External ecosystem generates ideas."]},
+  {id:"u3", title:"GenAI and LLM use cases",
+   guide:"How effectively has the organisation harnessed GenAI and LLM capabilities for business value?",
+   ask:"What GenAI use cases are live? What savings or productivity gains are attributed to GenAI? What guardrails are in place?",
+   levels:["No GenAI use cases. Organisation has not explored LLM applications.",
+           "Some GenAI experimentation (ChatGPT for individuals). No enterprise deployment. No governance.",
+           "1-2 production GenAI use cases with model cards, human-in-the-loop, and cost tracking.",
+           "Multiple GenAI use cases: catalog automation, NLP, document AI, code generation. Value tracked.",
+           "GenAI factory: rapid prototyping to production. GenAI embedded in core processes. $Xm value tracked."]},
+  {id:"u4", title:"AI value realisation and impact measurement",
+   guide:"How rigorously does the organisation measure and communicate AI's business impact?",
+   ask:"Is AI value tracked with before/after measurement? Are AI savings attributed correctly? Who reports AI value to the board?",
+   levels:["No value measurement. Success defined as deploying a model, not business outcome.",
+           "Informal value claims. No rigorous attribution. ROI not measured or reported.",
+           "Value metrics defined before deployment. Post-deployment measurement 3 and 12 months after go-live.",
+           "AI value dashboard updated monthly. Savings, productivity, and revenue impacts tracked.",
+           "AI value tracked at portfolio level. External benchmarking. AI ROI reported to board quarterly."]},
+]},
+
+{id:"culture", name:"Culture & Change Management", icon:"🌱", criteria:[
+  {id:"c1", title:"Organisational openness to AI",
+   guide:"How receptive is the broader organisation to adopting AI tools and changing how they work?",
+   ask:"What is the resistance level to AI adoption? Have AI-related job concerns been addressed? Is there a communication strategy?",
+   levels:["Strong resistance to AI. Fear of job displacement dominant. Leadership not addressing concerns.",
+           "Mixed reaction. Some enthusiasts, significant resistance. No formal change programme.",
+           "Structured change management programme. AI benefits and risks communicated openly. Concerns addressed.",
+           "Majority of staff engaged with AI initiatives. Champions network active. Resistance declining.",
+           "AI adoption normalised. Workforce confident working alongside AI. Culture of continuous AI learning."]},
+  {id:"c2", title:"Shadow AI risk management",
+   guide:"How well does the organisation manage the risk of unsanctioned AI tool use (Shadow AI)?",
+   ask:"Is ChatGPT or other AI tools used without IT governance? Is there a sanctioned AI tool policy? How is Shadow AI detected?",
+   levels:["Shadow AI widespread. No policy. Sensitive data shared with external AI tools without controls.",
+           "Shadow AI policy being drafted. Awareness of risk. Detection capability limited.",
+           "Shadow AI policy published. Approved tool list. DLP controls detect sensitive data to AI tools.",
+           "Shadow AI incidents tracked. Policy enforced. Fast-track approval process reduces shadow AI incentive.",
+           "Shadow AI eliminated by providing better sanctioned alternatives. Approval in <24 hours."]},
+  {id:"c3", title:"AI change management and training",
+   guide:"How effective are programmes to build AI capability and manage change across the workforce?",
+   ask:"What AI training programmes exist? Are they role-specific? Is adoption tracked? What is the completion rate?",
+   levels:["No AI training programme. Staff expected to self-educate. Change not managed.",
+           "Ad hoc AI training available. Not mandatory. No tracking. Coverage low.",
+           "Role-specific AI training programme. Mandatory for key roles. Completion tracked.",
+           "AI learning pathways per role. Certification supported. Training effectiveness measured.",
+           "Continuous AI learning culture. Micro-learning, hands-on labs, and AI hackathons. 80%+ completion."]},
+  {id:"c4", title:"Data-driven decision culture",
+   guide:"How deeply embedded is data-driven decision-making — the precursor to AI-driven decisions?",
+   ask:"Are major decisions made with data evidence? Is intuition routinely challenged with data? Is data used to set targets?",
+   levels:["Decisions made on intuition. Data used to justify decisions already made. HiPPO culture dominant.",
+           "Some teams use data but inconsistently. Others resistant. Data quality doubt undermines use.",
+           "Data used in most operational decisions. Executive dashboards actively used. Culture improving.",
+           "Data-first culture. Decisions require data evidence. AI outputs trusted and acted upon.",
+           "AI-informed autonomous decisions for defined operational use cases. Full trust in AI outputs."]},
+]},
+
+{id:"security", name:"Security, Privacy & Ethics", icon:"🔐", criteria:[
+  {id:"se1", title:"AI-specific security controls",
+   guide:"Does the organisation have security controls designed specifically for AI system vulnerabilities?",
+   ask:"Are AI APIs protected against prompt injection? Are model endpoints tested for adversarial inputs? Is model theft (extraction attacks) defended against?",
+   levels:["No AI-specific security. AI systems treated like any other web service. Known AI attacks not defended.",
+           "Some awareness of AI security risks. No specific controls. Prompt injection not defended.",
+           "AI security controls defined: input validation, output filtering, rate limiting, prompt injection defence.",
+           "Adversarial robustness testing. Model extraction attack defences. AI APIs in WAF scope.",
+           "Continuous AI red-teaming. Automated adversarial testing in CI/CD. AI-specific threat model maintained."]},
+  {id:"se2", title:"Data privacy in model training and inference",
+   guide:"How effectively is personal data protected throughout the AI model lifecycle?",
+   ask:"Is PII anonymised before model training? Can models leak training data (membership inference)? Is federated learning evaluated?",
+   levels:["PII used in model training without anonymisation. No awareness of privacy risks in AI.",
+           "Some awareness of ML privacy risks. PII sometimes anonymised. No systematic approach.",
+           "PII anonymised before training. Differential privacy evaluated. Membership inference risk assessed.",
+           "Privacy-by-design in AI. Synthetic data used where possible. GDPR Article 22 compliance verified.",
+           "Federated learning for sensitive data. Automated PII detection in training pipelines. Privacy audits."]},
+  {id:"se3", title:"Ethical AI enforcement",
+   guide:"How effectively are ethical AI principles enforced — beyond policy documentation?",
+   ask:"Is there an ethics review board? Are ethical AI principles operationalised in the development process? How are ethical violations handled?",
+   levels:["No ethical AI framework. AI ethics treated as a communications exercise, not a governance function.",
+           "Ethical AI principles documented but not operationalised. No review board. Not enforced.",
+           "Ethical review process for high-risk AI. Ethics checklist in development workflow. Owner named.",
+           "Ethics review board active. Ethical AI training for all AI practitioners. Violations have consequences.",
+           "Ethical AI is a competitive differentiator. External ethics advisory board. Published ethical AI standards."]},
+  {id:"se4", title:"LLM-specific risks — hallucination, prompt injection, data leakage",
+   guide:"How well does the organisation manage the unique risks introduced by large language models?",
+   ask:"Is hallucination detection in place for LLM outputs? Are prompt injection attacks defended? Is sensitive data prevented from appearing in LLM responses?",
+   levels:["LLM risks not understood or managed. LLMs deployed without specific risk controls.",
+           "Awareness of LLM risks. Some output review in place. No automated detection or defence.",
+           "Hallucination detection for high-stakes LLM outputs. Prompt injection defences. Output filtering.",
+           "Automated LLM risk controls: grounding, RAG for factual accuracy, PII scrubbing of outputs.",
+           "LLM risk management platform: real-time hallucination scoring, adversarial prompt detection, full observability."]},
+]},
+];
+
+const RECS = {
+  1:{label:"Unaware",colour:"#E24B4A",bgcol:"#fff0f0",txtcol:"#6b1818",actions:[
+    "Commission an AI readiness assessment with your leadership team and present findings to the board",
+    "Select a single high-value, low-risk AI use case as a proof-of-concept to build internal credibility",
+    "Appoint a named AI executive sponsor and establish an AI steering committee",
+    "Invest in data foundation first — AI cannot succeed without reliable, clean, governed data",
+    "Launch an AI literacy programme for all business leaders — minimum 4-hour introductory workshop",
+    "Engage a cloud provider (Azure, AWS, GCP) for a free AI readiness workshop and architecture review",
+  ]},
+  2:{label:"Exploring",colour:"#BA7517",bgcol:"#fff3cd",txtcol:"#5a3800",actions:[
+    "Formalise the AI strategy with a funded 3-year roadmap and measurable OKRs",
+    "Establish an ML platform (Azure ML, SageMaker, or Vertex AI) and mandate its use for all AI work",
+    "Hire your first ML Engineer alongside Data Scientists — engineering is what takes models to production",
+    "Define and publish an AI policy covering acceptable use, prohibited use, and risk categories",
+    "Conduct bias and fairness assessment on your first production model before go-live",
+    "Build your Bronze/Silver/Gold data architecture — it is the prerequisite for every AI use case",
+  ]},
+  3:{label:"Developing",colour:"#5F5E5A",bgcol:"#f0f0f0",txtcol:"#333",actions:[
+    "Implement MLOps practices: CI/CD for ML, model versioning, automated testing, and drift monitoring",
+    "Deploy a feature store and establish feature sharing across teams — eliminate feature duplication",
+    "Launch a shadow AI policy with a fast-track approval process to channel employee AI innovation safely",
+    "Conduct a full EU AI Act gap assessment and initiate ISO 42001 compliance programme",
+    "Establish an AI value measurement dashboard — track ROI per use case and report to board quarterly",
+    "Scale from 2-3 AI use cases to 10+ by creating a structured pilot-to-production scaling process",
+  ]},
+  4:{label:"Scaling",colour:"#0F6E56",bgcol:"#d4edda",txtcol:"#0a4535",actions:[
+    "Adopt data mesh principles — move AI ownership to business domains with central platform governance",
+    "Build an AI factory: standardised, repeatable process from use case identification to production in weeks",
+    "Implement continuous AI risk monitoring with automated bias detection and fairness dashboards",
+    "Establish federated learning or differential privacy for sensitive data use cases",
+    "Commission an independent third-party AI governance audit — publish findings",
+    "Engage with regulators proactively on your AI governance practices as a competitive differentiator",
+  ]},
+  5:{label:"Leading",colour:"#4B3B8C",bgcol:"#ede9ff",txtcol:"#2d1f6e",actions:[
+    "Publish your responsible AI framework externally — build industry credibility and attract talent",
+    "Contribute to open-source AI projects and participate in industry standards bodies",
+    "Build AI co-innovation partnerships with leading AI providers and academic institutions",
+    "Drive AI as a product: embedded AI in customer-facing products generating measurable revenue",
+    "Establish an AI innovation lab focused on 3-5 year horizon AI capabilities",
+    "Benchmark your AI maturity externally and publish progress as a board-level strategic metric",
+  ]},
+};
+
+const BAR_COLS = ["","#E24B4A","#BA7517","#888780","#0F6E56","#4B3B8C"];
+const LVL_NAMES = ["","Unaware","Exploring","Developing","Scaling","Leading"];
+const scores = {};
+let totalAnswered = 0;
+const totalQ = DIMS.reduce((s,d)=>s+d.criteria.length,0);
+DIMS.forEach(d=>d.criteria.forEach(c=>scores[c.id]=0));
+
+function buildAssessment() {
+  const body = document.getElementById('assessment-body');
+  body.innerHTML = '';
+  DIMS.forEach(dim => {
+    const el = document.createElement('div');
+    el.className = 'dim-block';
+    el.id = 'dim-block-' + dim.id;
+    el.innerHTML = `<div class="dim-hdr" id="dim-hdr-${dim.id}" onclick="toggleDim('${dim.id}')">
+      <div class="dim-hdr-left">
+        <span class="dim-icon">${dim.icon}</span>
+        <div>
+          <div class="dim-hdr-title">${dim.name}</div>
+          <div class="dim-hdr-sub">${dim.criteria.length} criteria</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dim-pill" id="pill-${dim.id}">Not started</span>
+        <span class="chev">▼</span>
+      </div>
+    </div>
+    <div class="dim-body" id="body-${dim.id}">
+      ${dim.criteria.map(c=>`
+        <div class="criterion">
+          <div class="crit-title">${c.title}</div>
+          <div class="crit-guide">${c.guide}</div>
+          <div class="crit-ask">💬 Questions to ask: ${c.ask}</div>
+          <div class="level-btns">
+            ${c.levels.map((l,i)=>`
+              <button class="lvl-btn" id="btn-${c.id}-${i+1}" onclick="setScore('${c.id}',${i+1},'${dim.id}')">
+                <span class="lvl-num">L${i+1} — ${LVL_NAMES[i+1]}:</span> ${l}
+              </button>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`;
+    body.appendChild(el);
+  });
+}
+
+function toggleDim(id) {
+  const body = document.getElementById('body-'+id);
+  const hdr = document.getElementById('dim-hdr-'+id);
+  body.classList.toggle('open');
+  hdr.classList.toggle('expanded');
+}
+
+function openDim(id) {
+  const body = document.getElementById('body-'+id);
+  const hdr = document.getElementById('dim-hdr-'+id);
+  if (!body.classList.contains('open')) {
+    body.classList.add('open');
+    hdr.classList.add('expanded');
+  }
+  setTimeout(()=>{ const el=document.getElementById('dim-block-'+id); if(el) el.scrollIntoView({behavior:'smooth'}); }, 100);
+}
+
+function setScore(critId, level, dimId) {
+  const wasAnswered = scores[critId] > 0;
+  scores[critId] = level;
+  if (!wasAnswered) totalAnswered++;
+  for (let i=1;i<=5;i++) {
+    const b = document.getElementById(`btn-${critId}-${i}`);
+    if (b) b.className = 'lvl-btn' + (i===level ? ` sel-${level}` : '');
+  }
+  updateProgress();
+  updatePill(dimId);
+}
+
+function updateProgress() {
+  const pct = Math.round((totalAnswered/totalQ)*100);
+  ['prog-bar-fill','prog-mini-fill'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.width=pct+'%'; });
+  const mc = document.getElementById('prog-count-main'); if(mc) mc.textContent=`${totalAnswered} / ${totalQ} answered`;
+  const ml = document.getElementById('prog-mini-label'); if(ml) ml.textContent=`${totalAnswered} / ${totalQ} answered`;
+}
+
+function updatePill(dimId) {
+  const dim = DIMS.find(d=>d.id===dimId);
+  const answered = dim.criteria.filter(c=>scores[c.id]>0);
+  const pill = document.getElementById('pill-'+dimId);
+  if (!pill) return;
+  if (answered.length===0) { pill.textContent='Not started'; pill.style.background=''; pill.style.color=''; return; }
+  const avg = (answered.reduce((s,c)=>s+scores[c.id],0)/dim.criteria.length).toFixed(1);
+  const lv = Math.round(parseFloat(avg));
+  const bgc={1:'#fde8e8',2:'#fff3cd',3:'#f0f0f0',4:'#d4edda',5:'#ede9ff'};
+  const txc={1:'#842029',2:'#664d03',3:'#444',4:'#0a4535',5:'#2d1f6e'};
+  pill.textContent=`Avg ${avg}/5 · ${answered.length}/${dim.criteria.length} done`;
+  pill.style.background=bgc[lv]||'#f0f0f0';
+  pill.style.color=txc[lv]||'#444';
+}
+
+function getDimScore(dim) {
+  const answered=dim.criteria.filter(c=>scores[c.id]>0);
+  if(answered.length===0) return null;
+  return answered.reduce((s,c)=>s+scores[c.id],0)/dim.criteria.length;
+}
+
+function getOverall() {
+  const ss=DIMS.map(d=>getDimScore(d)).filter(s=>s!==null);
+  if(ss.length===0) return null;
+  return ss.reduce((a,b)=>a+b,0)/ss.length;
+}
+
+function resetAll() {
+  Object.keys(scores).forEach(k=>scores[k]=0);
+  totalAnswered=0;
+  buildAssessment();
+  updateProgress();
+}
+
+function buildResults() {
+  const overall = getOverall();
+  const body = document.getElementById('results-body');
+  if (!overall) {
+    body.innerHTML='<div style="padding:2rem;text-align:center;color:#888;font-size:14px">Complete at least one dimension in the assessment to see your AI readiness results.</div>';
+    return;
+  }
+  const lvl = Math.round(overall);
+  const pct = Math.round((overall/5)*100);
+  const answeredDims = DIMS.filter(d=>getDimScore(d)!==null);
+  const gaps = [...answeredDims].map(d=>({dim:d,score:getDimScore(d)})).sort((a,b)=>a.score-b.score);
+  const rec = RECS[lvl] || RECS[1];
+
+  const readinessLabels = {1:"Not AI Ready",2:"AI Exploration Phase",3:"Early AI Adopter",4:"AI Scaling Organisation",5:"AI Leader"};
+  const readinessBg = {1:"#fff0f0",2:"#fff3cd",3:"#f0f0f0",4:"#d4edda",5:"#ede9ff"};
+  const readinessTx = {1:"#6b1818",2:"#5a3800",3:"#333",4:"#0a4535",5:"#2d1f6e"};
+
+  let html = `<div style="margin-bottom:16px">
+    <span style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:20px;font-size:14px;font-weight:600;background:${readinessBg[lvl]};color:${readinessTx[lvl]};border:1px solid ${rec.colour}">
+      🤖 AI Readiness Status: ${readinessLabels[lvl]} — Level ${lvl}
+    </span>
+  </div>`;
+
+  html += `<div class="results-stats">
+    <div class="rstat"><div class="rstat-val">${overall.toFixed(1)}</div><div class="rstat-label">Overall score / 5.0</div></div>
+    <div class="rstat"><div class="rstat-val" style="font-size:16px;padding-top:6px">${LVL_NAMES[lvl]}</div><div class="rstat-label">AI Maturity Level ${lvl}</div></div>
+    <div class="rstat"><div class="rstat-val">${pct}%</div><div class="rstat-label">Readiness index</div></div>
+    <div class="rstat"><div class="rstat-val">${answeredDims.length}/${DIMS.length}</div><div class="rstat-label">Dimensions scored</div></div>
+  </div>`;
+
+  html += `<div class="panel"><div class="panel-title">📊 AI Readiness by dimension</div>`;
+  answeredDims.forEach(dim=>{
+    const s=getDimScore(dim);
+    const p=Math.round((s/5)*100);
+    const cl=Math.round(s);
+    html+=`<div class="dim-result-row">
+      <div class="drr-name">${dim.icon} ${dim.name}</div>
+      <div class="drr-bar-bg"><div class="drr-bar-fill" style="width:${p}%;background:${BAR_COLS[cl]}"></div></div>
+      <div class="drr-score" style="color:${BAR_COLS[cl]}">${s.toFixed(1)}</div>
+      <div class="drr-level">${LVL_NAMES[cl]}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Priority gaps — lowest 3
+  if (gaps.length > 0) {
+    html += `<div class="panel"><div class="panel-title">⚠️ Highest-priority AI readiness gaps</div>`;
+    gaps.slice(0,3).forEach(({dim,score})=>{
+      const lv=Math.round(score);
+      const next=Math.min(5,lv+1);
+      const gr=RECS[lv]||RECS[1];
+      html+=`<div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #eee">
+        <div class="rec-dim-hdr">
+          <span style="font-size:16px">${dim.icon}</span>
+          <span style="font-size:13px;font-weight:600;color:#1F3864">${dim.name}</span>
+          <span class="rec-pill" style="background:${gr.bgcol};color:${gr.txtcol}">Level ${lv} — ${gr.label}</span>
+          <span style="font-size:11px;color:#888;margin-left:2px">→ target Level ${next}: ${LVL_NAMES[next]}</span>
+        </div>
+        <div class="rec-body">Key questions to ask before advancing:</div>
+        <div class="ask-box">
+          <div class="ask-box-title">🔍 Diagnostic questions</div>
+          ${dim.criteria.filter(c=>scores[c.id]>0 && scores[c.id]<=2).map(c=>`<div class="ask-item">• ${c.ask}</div>`).join('') || '<div class="ask-item">Review all criteria in this dimension to identify specific gaps.</div>'}
+        </div>
+        <div class="rec-body" style="margin-top:10px">Actions to advance:</div>
+        ${gr.actions.map(a=>`<div class="rec-action"><span class="rec-arrow">→</span>${a}</div>`).join('')}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Strengths — highest scoring
+  const strengths = [...answeredDims].map(d=>({dim:d,score:getDimScore(d)})).sort((a,b)=>b.score-a.score).filter(x=>x.score>=3.5);
+  if (strengths.length > 0) {
+    html += `<div class="panel"><div class="panel-title">✅ AI readiness strengths to build on</div>`;
+    strengths.slice(0,3).forEach(({dim,score})=>{
+      const lv=Math.round(score);
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #eee">
+        <span style="font-size:15px">${dim.icon}</span>
+        <span style="font-size:13px;font-weight:500;color:#1F3864;flex:1">${dim.name}</span>
+        <span style="font-size:12px;font-weight:700;color:${BAR_COLS[lv]}">${score.toFixed(1)} / 5.0</span>
+        <span style="font-size:11px;color:#888;min-width:70px">${LVL_NAMES[lv]}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Overall recommendation
+  html += `<div class="panel" style="border-left:4px solid ${rec.colour}">
+    <div class="panel-title">💡 Overall AI readiness recommendation — ${rec.label}</div>
+    <div class="rec-body" style="margin-bottom:10px">At Level ${lvl} (${rec.label}), your organisation should focus on these actions to advance to Level ${Math.min(5,lvl+1)} (${LVL_NAMES[Math.min(5,lvl+1)]}):</div>
+    ${rec.actions.map(a=>`<div class="rec-action"><span class="rec-arrow">→</span>${a}</div>`).join('')}
+  </div>`;
+
+  html += `<div style="margin-top:4px">
+    <button class="btn btn-primary" onclick="showSection('assess')">← Back to Assessment</button>
+    <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.snav-item').forEach((s,i)=>{ if(i<3) s.classList.remove('active'); });
+  document.getElementById('section-'+id).classList.add('active');
+  const idx={overview:0,assess:1,results:2}[id];
+  if(idx!==undefined) document.querySelectorAll('.snav-item')[idx].classList.add('active');
+  if(id==='results') buildResults();
+}
+
+buildAssessment();
+</script>
+</body>
+</html>
